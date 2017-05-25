@@ -1,0 +1,12 @@
+#!/bin/bash
+rm ciphertext1
+rm ciphertext2
+rm ciphertext3
+rm ciphertext4
+rm ciphertext5
+rm key20
+rm key70000
+rm plaintext1_a
+rm plaintext2_a
+rm plaintext3_a
+rm plaintext4_a

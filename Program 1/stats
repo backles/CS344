@@ -1,0 +1,125 @@
+#!/bin/bash
+#Author: Braden Ackles
+#Date: 10/7/15
+#CS344
+
+#check if the correct number of arguments was entereed
+if [ $# -lt 1 ] || [ $# -gt 2 ]
+	then
+   	echo "Incorrect number of parameters"
+	echo "Incorrect number of parameters" >&2
+	echo "First enter either [-rows|cols] then a file or leaving blank will refrence stdout"
+	exit 1 #exit with error
+fi
+
+word="$1" #the first argument
+firstletter=${word:0:1} #the first letter of the first argument
+secondletter=${word:1:1} #the second letter of the second argument
+
+if [ "$firstletter" != "-" ] #check if the first letter is a dash
+	then
+   		echo "You did not put a - before your input please remember to do that! Example -rows"
+		echo "No - before your selection" >&2
+		exit 1
+fi
+
+tempfile="acklesb.$$" #tempfile path with process ID
+inputFilePath="UNKOWN" #the file to use
+rowCol="UNKOWN" #What opporation is happening
+length="UNKOWN" #The length of the file
+trap 'rm -f $tempfile*; echo "trap triggered" >&2; exit 0' INT HUP TERM
+
+if [ $2 ] #if there is a second argument
+	then
+		if [ -r $2 ] #if you can read the file
+			then
+				inputFilePath=$2 #set the inputPath to the second argument
+		
+		elif [ ! -s $2 ]
+			then
+			  	echo "The file is empty"
+				echo "The file is empty" >&2
+				exit 0
+		else
+		   echo "The test file is not readable" 
+		   echo "The test file is not readable" >&2
+		   exit 1 #exit because you can't read the file
+		fi
+else #if there was no second argument
+   	echo "Please enter your values seperated by a space"
+	echo "To finish entering press 'CTRL + D'"
+	cat > $tempfile #take the input and put it in the file
+	inputFilePath=$tempfile #change the file path
+fi
+
+#Check to see rows/cols or if the statement is invalid
+if [ $secondletter == "r" ] #if they want rows
+	then
+	   	rowCol="row"
+   		x=1
+		while read line #for every line in file
+		do
+			echo $line | tr ' ' '\n' >> $tempfile.$x #put each line in its own temp file
+			sort -n "$tempfile.$x" -o $tempfile.$x
+			x=$((x+1)) #increment tempfile namer
+		done < "$inputFilePath"
+		length=$x #how many temp files there are
+elif [ $secondletter == "c" ] #if they choose columns
+	then
+	   	rowCol="column"
+	   	x=0
+   		while read line
+		do
+			y=1
+			echo $line | tr ' ' '\n' >> $tempfile.0.$x
+			while read char
+			do
+				echo $char | tr ' ' '\n' >> $tempfile.$y
+				y=$((y+1))
+			done < $tempfile.0.$x
+			rm -f $tempfile.0.$x
+			x=$((x+1))
+		done < $inputFilePath
+		length=$y
+else
+   	echo "You did not enter a valid operation please try again"
+	echo "You did not enter a valid operation please try again" >&2
+	exit 1
+fi
+echo "Here are the results for the $rowCol"
+echo "Average		Median"
+z=1
+if [ -z "$length" ] #if there are no items to do
+then
+	rm -f $tempfile* #remove the temp files
+	exit 0
+fi
+while [ "$z" -ne "$length" ] #for every temp file
+do
+   	sum=0
+	count=0
+	line="$(cat $tempfile.$z)" #put the line in a variable
+	for i in $line #for each item in the line
+       	do
+		sum=$(( $sum+$i )) #add the line up
+		((count++)) #keep track of how many items there are for the average
+       	done
+	wordCount=`wc -l < $tempfile.$z` #Get the word count for the median
+	midrow=`expr $wordCount/2` #Find the middle element for the median
+	((midrow++))	#go to the next element so the bigger one will be choosen
+	remainder=$((sum % count))	#find remainder to see if need to round up
+	a=$((sum/count))		#find the aveage
+	b=$((remainder*10))		#make the remainder a whole number
+	b=$((b/count))		#divide the remainder in half
+	if [ "$b" -ge 5 ]	#see if it is greater then 5 for rounding
+     	then		
+		a=$((a+1))		#if it is then round up
+	fi
+        echo -e -n "$a\t\t"		#print the average
+	sort -n $tempfile.$z | head -n "$midrow" | tail -n 1 | tr '\n' '\t'
+	echo " "
+	z=$((z+1)) #Go to the next file
+done 
+
+rm -f $tempfile* #remove the temp files
+exit 0 #exit without error

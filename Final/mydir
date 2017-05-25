@@ -1,0 +1,7 @@
+total 40
+drwxrwx---. 2 acklesb upg51375 1024 Dec  9 11:47 ./
+drwxrwx---. 8 acklesb upg51375 1024 Dec  9 11:12 ../
+-rw-rw----. 1 acklesb upg51375  102 Dec  9 11:30 file
+-rw-rw----. 1 acklesb upg51375    0 Dec  9 11:47 mydir
+-rwx------. 1 acklesb upg51375    1 Dec  9 11:27 test
+-rw-rw----. 1 acklesb upg51375   13 Dec  9 11:28 test1
